@@ -1,11 +1,36 @@
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import "./style.css";
 import firebase from "./firebaseConnection";
 import 'firebase/firestore';
 
 function App() {
+  const [idPost, setIdPost] = useState("");
   const [titulo, setTitulo] = useState("");
   const [autor, setAutor] = useState("");
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    async function loadPosts() {
+      await firebase.firestore().collection("posts")
+      .onSnapshot((doc) => {
+        let meusPosts = [];
+        
+        doc.forEach((item) => {
+          meusPosts.push({
+            id: item.id,
+            titulo: item.data().titulo,
+            autor: item.data().autor,
+          })
+        });
+        
+        setPosts(meusPosts);
+
+      })
+    }
+
+    loadPosts();
+
+  }, []);
 
   async function handleAdd() {
     
@@ -35,7 +60,7 @@ function App() {
   }
 
   async function buscaPost() {
-    await firebase.firestore().collection("posts")
+    /*await firebase.firestore().collection("posts")
     .doc("123")
     .get()
     .then( (snapshot) => {
@@ -44,6 +69,48 @@ function App() {
     })
     .catch( () => {
       console.log("erro");
+    })*/
+
+    await firebase.firestore().collection("posts")
+    .get()
+    .then((snapshot) => {
+      let lista = [];
+
+      snapshot.forEach((doc) => {
+        lista.push({
+          id: doc.id,
+          titulo: doc.data().titulo,
+          autor: doc.data().autor
+        })
+      })
+
+      setPosts(lista);
+    })
+    .catch(() => {
+      console.log("Erro");
+    })
+  }
+
+  async function editarPost() {
+    await firebase.firestore().collection("posts")
+    .doc(idPost)
+    .update({
+      titulo: titulo,
+      autor: autor
+    })
+    .then(() => {
+      console.log("dados atualizados com sucesso");
+      setIdPost("");
+      setTitulo("");
+      setAutor("");
+    })
+  }
+
+  async function excluirPost(id) {
+    await firebase.firestore().collection("posts").doc(id)
+    .delete()
+    .then(() => {
+      alert("Post excluido com sucesso!")
     })
   }
 
@@ -53,6 +120,11 @@ function App() {
 
 
       <div className="container">
+
+        <label>ID: </label>
+        <input type="text" value={idPost} onChange={(e) => setIdPost(e.target.value)}/>
+
+
         <label>Titulo: </label>
         <textarea type="text" value={titulo} onChange={ (e) => setTitulo(e.target.value) }></textarea>
 
@@ -61,6 +133,20 @@ function App() {
 
         <button onClick={ handleAdd }>Cadastrar</button>
         <button onClick={ buscaPost }>Buscar post</button>
+        <button onClick={ editarPost }>Editar</button> <br/>
+
+        <ul>
+          {posts.map((post) => {
+            return(
+              <li key={post.id}>
+                <span>ID - {post.id}</span> <br/>
+                <span>Titulo: {post.titulo}</span> <br/>
+                <span>Autor: {post.autor}</span> <br/>
+                <button onClick={() => excluirPost(post.id)}>Excluir post</button> <br/> <br/>
+              </li>
+            )
+          })}
+        </ul>
 
       </div>
       
