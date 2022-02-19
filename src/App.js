@@ -8,6 +8,8 @@ function App() {
   const [titulo, setTitulo] = useState("");
   const [autor, setAutor] = useState("");
   const [posts, setPosts] = useState([]);
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
 
   useEffect(() => {
     async function loadPosts() {
@@ -114,12 +116,36 @@ function App() {
     })
   }
 
+  async function novoUsuario() {
+   await firebase.auth().createUserWithEmailAndPassword(email, senha)
+   .then(() => {
+     console.log("usuário cadastrado com sucesso");
+   })
+   .catch((error) => {
+     console.log("error" + error);
+   })
+  }
+
   return (
     <div className="App">
       <h1>ReactJs + Firebase :)</h1> <br/>
 
 
       <div className="container">
+        <label>Email</label>
+        <input type="text" value={email} onChange={ (e) => setEmail(e.target.value) }/>
+
+        <label>Senha</label>
+        <input type="password" value={senha} onChange={ (e) => setSenha(e.target.value) }/>
+
+        <button onClick={ novoUsuario }>Cadastrar</button>
+
+      </div>
+
+
+      <div className="container">
+
+        <h2>Banco de dados:</h2>
 
         <label>ID: </label>
         <input type="text" value={idPost} onChange={(e) => setIdPost(e.target.value)}/>
